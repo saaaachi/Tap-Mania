@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Tap Mania 10s</title>
+    <style>
+        body { margin: 0; overflow: hidden; background: #fff3e0; font-family: sans-serif; touch-action: none; }
+        /* 広告エリア */
+        #ad-top, #ad-bottom { position: fixed; left: 0; width: 100%; height: 110px; background: #333; z-index: 100; display: flex; align-items: center; justify-content: center; }
+        #ad-top { top: 0; }
+        #ad-bottom { bottom: 0; }
+        iframe { border: none; width: 100%; height: 110px; }
+        
+        #game-area { margin-top: 110px; height: calc(100vh - 220px); display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        #tap-circle { width: 200px; height: 200px; background: #ff9800; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 40px; font-weight: bold; box-shadow: 0 10px 0 #e65100; cursor: pointer; user-select: none; transition: transform 0.05s; }
+        #tap-circle:active { transform: translateY(5px); box-shadow: 0 5px 0 #e65100; }
+        
+        #ui { position: absolute; top: 120px; font-size: 24px; font-weight: bold; color: #e65100; }
+        #startScreen { position: absolute; top: 110px; left: 0; width: 100%; height: calc(100vh - 220px); background: rgba(255,255,255,0.9); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 50; }
+        #goButton { padding: 15px 40px; font-size: 24px; background: #ff5722; border: none; border-radius: 50px; color: white; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <div id="ad-top"><iframe id="frame-top" src="ad.html"></iframe></div>
+    <div id="ad-bottom"><iframe id="frame-bottom" src="ad.html"></iframe></div>
+
+    <div id="game-area">
+        <div id="ui">TIME: 10.0 | TAPS: 0</div>
+        <div id="tap-circle">TAP!</div>
+        
+        <div id="startScreen">
+            <h1 style="color:#ff5722;">TAP MANIA</h1>
+            <p>10秒間で限界まで叩け！</p>
+            <button id="goButton">START</button>
+            <p>BEST: <span id="best-ui">0</span> Taps</p>
+        </div>
+    </div>
+
+    <script>
+        const tapCircle = document.getElementById("tap-circle");
+        const ui = document.getElementById("ui");
+        const startScreen = document.getElementById("startScreen");
+        const bestUi = document.getElementById("best-ui");
+
+        let taps = 0;
+        let timeLeft = 10.0;
+        let gameActive = false;
+        let timer;
+        let bestTaps = localStorage.getItem("tap_mania_best") || 0;
+        bestUi.innerText = bestTaps;
+
+        document.getElementById("goButton").onclick = () => {
+            startScreen.style.display = "none";
+            gameActive = true;
+            taps = 0;
+            timeLeft = 10.0;
+            ui.innerText = `TIME: 10.0 | TAPS: 0`;
+            startTimer();
+        };
+
+        tapCircle.addEventListener("pointerdown", () => {
+            if(!gameActive) return;
+            taps++;
+            ui.innerText = `TIME: ${timeLeft.toFixed(1)} | TAPS: ${taps}`;
+            // 叩くたびに少し色を変える演出
+            tapCircle.style.background = `hsl(${20 + taps}, 100%, 50%)`;
+        });
+
+        function startTimer() {
+            timer = setInterval(() => {
+                timeLeft -= 0.1;
+                ui.innerText = `TIME: ${Math.max(0, timeLeft).toFixed(1)} | TAPS: ${taps}`;
+                if(timeLeft <= 0) {
+                    clearInterval(timer);
+                    gameOver();
+                }
+            }, 100);
+        }
+
+        function gameOver() {
+            gameActive = false;
+            if(taps > bestTaps) {
+                bestTaps = taps;
+                localStorage.setItem("tap_mania_best", bestTaps);
+            }
+            alert(`FINISH!\nYour Score: ${taps} Taps!`);
+            location.reload();
+        }
+
+        // 🚀 強制リフレッシュ（使い回しタグ対応）
+        setInterval(() => {
+            ["frame-top", "frame-bottom"].forEach(id => {
+                const frame = document.getElementById(id);
+                if (frame) {
+                    const currentSrc = frame.src;
+                    frame.src = "about:blank";
+                    setTimeout(() => { frame.src = currentSrc; }, 100);
+                }
+            });
+        }, 20100);
+    </script>
+</body>
+</html>
