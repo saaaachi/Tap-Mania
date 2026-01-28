@@ -5,77 +5,132 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Tap Mania 10s</title>
     <style>
-        body { margin: 0; overflow: hidden; background: #fff3e0; font-family: sans-serif; touch-action: none; }
-        /* 広告エリア */
-        #ad-top, #ad-bottom { position: fixed; left: 0; width: 100%; height: 110px; background: #333; z-index: 100; display: flex; align-items: center; justify-content: center; }
-        #ad-top { top: 0; }
-        #ad-bottom { bottom: 0; }
-        iframe { border: none; width: 100%; height: 110px; }
+        /* 画面を上・中・下に完全分離 */
+        body { 
+            margin: 0; height: 100vh; display: flex; flex-direction: column; 
+            background: #fff3e0; font-family: sans-serif; overflow: hidden; touch-action: none; 
+        }
         
-        #game-area { margin-top: 110px; height: calc(100vh - 220px); display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        #tap-circle { width: 200px; height: 200px; background: #ff9800; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 40px; font-weight: bold; box-shadow: 0 10px 0 #e65100; cursor: pointer; user-select: none; transition: transform 0.05s; }
+        /* 上下の広告枠 */
+        #ad-top, #ad-bottom { 
+            width: 100%; height: 110px; background: #333; 
+            display: flex; align-items: center; justify-content: center; flex-shrink: 0; z-index: 100;
+        }
+        iframe { border: none; width: 100%; height: 100%; }
+
+        /* ゲームエリア */
+        #game-area { 
+            flex-grow: 1; position: relative; width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: hidden; 
+        }
+        
+        #tap-circle { 
+            width: 180px; height: 180px; background: #ff9800; border-radius: 50%; 
+            display: flex; align-items: center; justify-content: center; color: white; 
+            font-size: 36px; font-weight: bold; box-shadow: 0 10px 0 #e65100; 
+            cursor: pointer; user-select: none; transition: transform 0.05s; z-index: 5;
+        }
         #tap-circle:active { transform: translateY(5px); box-shadow: 0 5px 0 #e65100; }
         
-        #ui { position: absolute; top: 120px; font-size: 24px; font-weight: bold; color: #e65100; }
-        #startScreen { position: absolute; top: 110px; left: 0; width: 100%; height: calc(100vh - 220px); background: rgba(255,255,255,0.9); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 50; }
-        #goButton { padding: 15px 40px; font-size: 24px; background: #ff5722; border: none; border-radius: 50px; color: white; font-weight: bold; }
+        #ui { position: absolute; top: 10px; font-size: 22px; font-weight: bold; color: #e65100; pointer-events: none; }
+
+        /* メニュー（ゲームオーバー）画面 */
+        #menuScreen { 
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
+            background: rgba(255,255,255,0.95); display: flex; flex-direction: column; 
+            align-items: center; justify-content: flex-start; z-index: 200; padding: 15px 0; box-sizing: border-box;
+        }
+
+        /* 中央広告の檻（被り防止マージン付き） */
+        #ad-middle-container { 
+            width: 300px; height: 250px; background: #eee;
+            display: none; justify-content: center; align-items: center; 
+            overflow: hidden; position: relative; flex-shrink: 0;
+            margin-bottom: 35px; /* ボタンとの隙間を確保 */
+            border: 1px solid #ddd;
+        }
+        
+        .btn-group { 
+            display: flex; flex-direction: column; align-items: center; gap: 10px; 
+            flex-shrink: 0; width: 100%; margin-top: auto; padding-bottom: 15px;
+        }
+        .menu-btn { padding: 14px 30px; font-size: 18px; border: none; border-radius: 50px; color: white; font-weight: bold; cursor: pointer; text-decoration: none; width: 240px; text-align: center; }
+        #goButton { background: #ff5722; box-shadow: 0 4px #bf360c; }
+        .link-btn { background: #ff4081; box-shadow: 0 4px #c2185b; }
+        .best-info { color: #e65100; font-size: 18px; font-weight: bold; margin: 5px 0; }
     </style>
 </head>
 <body>
-
-    <div id="ad-top"><iframe id="frame-top" src="ad.html"></iframe></div>
-    <div id="ad-bottom"><iframe id="frame-bottom" src="ad.html"></iframe></div>
+    <div id="ad-top"><iframe src="ad.html"></iframe></div>
 
     <div id="game-area">
         <div id="ui">TIME: 10.0 | TAPS: 0</div>
         <div id="tap-circle">TAP!</div>
         
-        <div id="startScreen">
-            <h1 style="color:#ff5722;">TAP MANIA</h1>
-            <p>10秒間で限界まで叩け！</p>
-            <button id="goButton">START</button>
-            <p>BEST: <span id="best-ui">0</span> Taps</p>
+        <div id="menuScreen">
+            <div style="text-align:center;">
+                <h1 id="menuTitle" style="color:#ff5722; margin:0; font-size: 26px;">TAP MANIA</h1>
+                <p id="menuMsg" style="margin:5px 0;">10秒間で限界まで叩け！</p>
+                <div class="best-info">BEST: <span id="best-ui">0</span> Taps</div>
+            </div>
+
+            <div id="ad-middle-container">
+                <script src="https://adm.shinobi.jp/s/1e6de436ea850948e238e975a93767eb"></script>
+            </div>
+
+            <div class="btn-group" id="btnGroup">
+                <button id="goButton" class="menu-btn">START</button>
+                <a href="https://saaaachi.github.io/Namber-Order/" class="menu-btn link-btn">他のゲームはこちら</a>
+            </div>
         </div>
     </div>
 
+    <div id="ad-bottom"><iframe src="ad.html"></iframe></div>
+
     <script>
-        const tapCircle = document.getElementById("tap-circle");
-        const ui = document.getElementById("ui");
-        const startScreen = document.getElementById("startScreen");
-        const bestUi = document.getElementById("best-ui");
+        const tapCircle = document.getElementById("tap-circle"),
+              ui = document.getElementById("ui"),
+              menuScreen = document.getElementById("menuScreen"),
+              menuTitle = document.getElementById("menuTitle"),
+              menuMsg = document.getElementById("menuMsg"),
+              bestUi = document.getElementById("best-ui"),
+              goButton = document.getElementById("goButton"),
+              adMid = document.getElementById("ad-middle-container"),
+              btnGroup = document.getElementById("btnGroup");
 
-        let taps = 0;
-        let timeLeft = 10.0;
-        let gameActive = false;
-        let timer;
+        let taps = 0, timeLeft = 10.0, gameActive = false, timer;
         let bestTaps = localStorage.getItem("tap_mania_best") || 0;
-        bestUi.innerText = bestTaps;
 
-        document.getElementById("goButton").onclick = () => {
-            startScreen.style.display = "none";
+        bestUi.innerText = bestTaps;
+        window.onload = () => { adMid.style.display = "none"; };
+
+        goButton.onclick = () => {
+            menuScreen.style.display = "none";
+            adMid.style.display = "none";
             gameActive = true;
             taps = 0;
             timeLeft = 10.0;
+            tapCircle.style.background = "#ff9800";
             ui.innerText = `TIME: 10.0 | TAPS: 0`;
             startTimer();
         };
 
-        tapCircle.addEventListener("pointerdown", () => {
+        tapCircle.addEventListener("pointerdown", (e) => {
+            e.preventDefault();
             if(!gameActive) return;
             taps++;
             ui.innerText = `TIME: ${timeLeft.toFixed(1)} | TAPS: ${taps}`;
-            // 叩くたびに少し色を変える演出
-            tapCircle.style.background = `hsl(${20 + taps}, 100%, 50%)`;
+            tapCircle.style.background = `hsl(${20 + (taps * 2)}, 100%, 50%)`;
         });
 
         function startTimer() {
             timer = setInterval(() => {
                 timeLeft -= 0.1;
-                ui.innerText = `TIME: ${Math.max(0, timeLeft).toFixed(1)} | TAPS: ${taps}`;
                 if(timeLeft <= 0) {
+                    timeLeft = 0;
                     clearInterval(timer);
                     gameOver();
                 }
+                ui.innerText = `TIME: ${timeLeft.toFixed(1)} | TAPS: ${taps}`;
             }, 100);
         }
 
@@ -84,22 +139,32 @@
             if(taps > bestTaps) {
                 bestTaps = taps;
                 localStorage.setItem("tap_mania_best", bestTaps);
+                bestUi.innerText = bestTaps;
             }
-            alert(`FINISH!\nYour Score: ${taps} Taps!`);
-            location.reload();
+            
+            menuTitle.innerText = "FINISH!";
+            menuTitle.style.color = "#ff5722";
+            menuMsg.innerText = `RESULT: ${taps} Taps!`;
+            goButton.innerText = "RETRY";
+            
+            btnGroup.style.opacity = "0";
+            btnGroup.style.pointerEvents = "none";
+            adMid.style.display = "flex"; 
+            menuScreen.style.display = "flex";
+
+            // 誤タップ防止の0.6秒待機
+            setTimeout(() => {
+                btnGroup.style.opacity = "1";
+                btnGroup.style.pointerEvents = "auto";
+            }, 600);
         }
 
-        // 🚀 強制リフレッシュ（使い回しタグ対応）
+        // 広告のリフレッシュ（iframeのみ）
         setInterval(() => {
-            ["frame-top", "frame-bottom"].forEach(id => {
-                const frame = document.getElementById(id);
-                if (frame) {
-                    const currentSrc = frame.src;
-                    frame.src = "about:blank";
-                    setTimeout(() => { frame.src = currentSrc; }, 100);
-                }
+            document.querySelectorAll('iframe').forEach(f => {
+                const s = f.src; f.src = "about:blank"; setTimeout(() => f.src = s, 100);
             });
-        }, 29500);
+        }, 30000);
     </script>
 </body>
 </html>
