@@ -3,24 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Tap Mania 10s</title>
+    <title>Tap Mania 10s - v26.7</title>
     <style>
-        /* 画面を上・中・下に完全分離 */
+        * { box-sizing: border-box; }
         body { 
             margin: 0; height: 100vh; display: flex; flex-direction: column; 
             background: #fff3e0; font-family: sans-serif; overflow: hidden; touch-action: none; 
         }
         
-        /* 上下の広告枠 */
+        /* 広告枠：150px (共通仕様) */
         #ad-top, #ad-bottom { 
-            width: 100%; height: 110px; background: #333; 
+            width: 100%; height: 150px; background: #333; 
             display: flex; align-items: center; justify-content: center; flex-shrink: 0; z-index: 100;
         }
         iframe { border: none; width: 100%; height: 100%; }
 
         /* ゲームエリア */
         #game-area { 
-            flex-grow: 1; position: relative; width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: hidden; 
+            flex-grow: 1; position: relative; width: 100%; display: flex; flex-direction: column; 
+            align-items: center; justify-content: center; background: #fff3e0;
         }
         
         #tap-circle { 
@@ -28,39 +29,49 @@
             display: flex; align-items: center; justify-content: center; color: white; 
             font-size: 36px; font-weight: bold; box-shadow: 0 10px 0 #e65100; 
             cursor: pointer; user-select: none; transition: transform 0.05s; z-index: 5;
+            -webkit-tap-highlight-color: transparent;
         }
         #tap-circle:active { transform: translateY(5px); box-shadow: 0 5px 0 #e65100; }
         
         #ui { position: absolute; top: 10px; font-size: 22px; font-weight: bold; color: #e65100; pointer-events: none; }
 
-        /* メニュー（ゲームオーバー）画面 */
+        /* メニュー画面 */
         #menuScreen { 
             position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
-            background: rgba(255,255,255,0.95); display: flex; flex-direction: column; 
-            align-items: center; justify-content: flex-start; z-index: 200; padding: 15px 0; box-sizing: border-box;
+            background: rgba(255,255,255,0.96); display: flex; flex-direction: column; 
+            align-items: center; justify-content: center; z-index: 200; padding: 20px 0;
         }
 
-        /* 中央広告の檻（被り防止マージン付き） */
+        /* 中央広告（i-mobile） */
         #ad-middle-container { 
-            width: 300px; height: 250px; background: #eee;
+            width: 320px; height: 100px; background: #eee; margin: 15px 0; 
             display: none; justify-content: center; align-items: center; 
-            overflow: hidden; position: relative; flex-shrink: 0;
-            margin-bottom: 35px; /* ボタンとの隙間を確保 */
-            border: 1px solid #ddd;
+            overflow: hidden; flex-shrink: 0; border: 1px solid #ddd;
+            transition: opacity 0.3s;
         }
         
-        .btn-group { 
-            display: flex; flex-direction: column; align-items: center; gap: 10px; 
-            flex-shrink: 0; width: 100%; margin-top: auto; padding-bottom: 15px;
-        }
-        .menu-btn { padding: 14px 30px; font-size: 18px; border: none; border-radius: 50px; color: white; font-weight: bold; cursor: pointer; text-decoration: none; width: 240px; text-align: center; }
+        .btn-group { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+        .menu-btn { width: 240px; padding: 15px; font-size: 18px; border: none; border-radius: 50px; color: white; font-weight: bold; cursor: pointer; text-decoration: none; text-align: center; transition: 0.2s; }
         #goButton { background: #ff5722; box-shadow: 0 4px #bf360c; }
+        #goButton:disabled { background: #ccc; box-shadow: none; color: #888; cursor: default; }
         .link-btn { background: #ff4081; box-shadow: 0 4px #c2185b; }
         .best-info { color: #e65100; font-size: 18px; font-weight: bold; margin: 5px 0; }
+
+        /* 大広告用カウントダウン付き */
+        #bigAdScreen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 3000; display: none; justify-content: center; align-items: center; }
+        .ad-frame-wrapper { width: 95%; height: 85%; position: relative; }
+        .ad-close-btn { 
+            position: absolute; top: -15px; right: -15px; 
+            color: white; font-size: 22px; font-weight: bold; 
+            cursor: pointer; background: rgba(0,0,0,0.8); 
+            width: 44px; height: 44px; border-radius: 50%; 
+            display: none; align-items: center; justify-content: center; 
+            z-index: 3100; border: 2px solid white; font-family: sans-serif;
+        }
     </style>
 </head>
 <body>
-    <div id="ad-top"><iframe src="ad.html"></iframe></div>
+    <div id="ad-top"><iframe id="frame-top" src="./ad.html?pos=top"></iframe></div>
 
     <div id="game-area">
         <div id="ui">TIME: 10.0 | TAPS: 0</div>
@@ -74,17 +85,27 @@
             </div>
 
             <div id="ad-middle-container">
-                <script src="https://adm.shinobi.jp/s/1e6de436ea850948e238e975a93767eb"></script>
+                <div id="im-8b492cea6667490da71c488bdcc7cfc8">
+                    <script async src="https://imp-adedge.i-mobile.co.jp/script/v1/spot.js?20220104"></script>
+                    <script>(window.adsbyimobile=window.adsbyimobile||[]).push({pid:84561,mid:590804,asid:1924211,type:"banner",display:"inline",elementid:"im-8b492cea6667490da71c488bdcc7cfc8"})</script>
+                </div>
             </div>
 
-            <div class="btn-group" id="btnGroup">
+            <div class="btn-group">
                 <button id="goButton" class="menu-btn">START</button>
                 <a href="https://saaaachi.github.io/" class="menu-btn link-btn">他のゲームはこちら</a>
             </div>
         </div>
+
+        <div id="bigAdScreen">
+            <div class="ad-frame-wrapper">
+                <div id="ad-close-btn" class="ad-close-btn" onclick="closeBigAd()"></div>
+                <iframe id="ad-large-frame" src="" style="width:100%; height:100%; border:none;"></iframe>
+            </div>
+        </div>
     </div>
 
-    <div id="ad-bottom"><iframe src="ad.html"></iframe></div>
+    <div id="ad-bottom"><iframe id="frame-bottom" src="./ad.html?pos=bottom"></iframe></div>
 
     <script>
         const tapCircle = document.getElementById("tap-circle"),
@@ -94,14 +115,12 @@
               menuMsg = document.getElementById("menuMsg"),
               bestUi = document.getElementById("best-ui"),
               goButton = document.getElementById("goButton"),
-              adMid = document.getElementById("ad-middle-container"),
-              btnGroup = document.getElementById("btnGroup");
+              adMid = document.getElementById("ad-middle-container");
 
-        let taps = 0, timeLeft = 10.0, gameActive = false, timer;
+        let taps = 0, timeLeft = 10.0, gameActive = false, timer, playCount = 0;
         let bestTaps = localStorage.getItem("tap_mania_best") || 0;
 
         bestUi.innerText = bestTaps;
-        window.onload = () => { adMid.style.display = "none"; };
 
         goButton.onclick = () => {
             menuScreen.style.display = "none";
@@ -136,35 +155,78 @@
 
         function gameOver() {
             gameActive = false;
+            playCount++;
             if(taps > bestTaps) {
                 bestTaps = taps;
                 localStorage.setItem("tap_mania_best", bestTaps);
                 bestUi.innerText = bestTaps;
             }
             
+            // --- ✨ 誤タップ防止ガード (1.5秒) ---
+            goButton.innerText = "お待ちください...";
+            goButton.disabled = true;
+            adMid.style.display = "flex";
+            adMid.style.pointerEvents = "none";
+            adMid.style.opacity = "0.4";
+
             menuTitle.innerText = "FINISH!";
             menuTitle.style.color = "#ff5722";
             menuMsg.innerText = `RESULT: ${taps} Taps!`;
-            goButton.innerText = "RETRY";
-            
-            btnGroup.style.opacity = "0";
-            btnGroup.style.pointerEvents = "none";
-            adMid.style.display = "flex"; 
             menuScreen.style.display = "flex";
 
-            // 誤タップ防止の0.6秒待機
             setTimeout(() => {
-                btnGroup.style.opacity = "1";
-                btnGroup.style.pointerEvents = "auto";
-            }, 600);
+                adMid.style.pointerEvents = "auto";
+                adMid.style.opacity = "1";
+                goButton.disabled = false;
+                goButton.innerText = "RETRY";
+            }, 1500);
+
+            // 大広告判定（3回目、以降7回ごと）
+            if (playCount === 3 || (playCount > 3 && (playCount - 3) % 7 === 0)) {
+                setTimeout(showBigAd, 500);
+            }
         }
 
-        // 広告のリフレッシュ（iframeのみ）
+        function showBigAd() {
+            const screen = document.getElementById("bigAdScreen");
+            const closeBtn = document.getElementById("ad-close-btn");
+            document.getElementById("ad-large-frame").src = "./ad.large.html?t=" + Date.now();
+            screen.style.display = "flex";
+            
+            let countdown = 5;
+            closeBtn.style.display = "flex";
+            closeBtn.innerText = countdown;
+            closeBtn.style.pointerEvents = "none";
+            closeBtn.style.opacity = "0.7";
+
+            const timerInt = setInterval(() => {
+                countdown--;
+                closeBtn.innerText = countdown;
+                if (countdown <= 0) {
+                    clearInterval(timerInt);
+                    closeBtn.innerText = "×";
+                    closeBtn.style.pointerEvents = "auto";
+                    closeBtn.style.opacity = "1";
+                }
+            }, 1000);
+        }
+
+        function closeBigAd() {
+            document.getElementById("bigAdScreen").style.display = "none";
+            document.getElementById("ad-large-frame").src = "";
+        }
+
+        // 広告リフレッシュ (30秒交互)
         setInterval(() => {
-            document.querySelectorAll('iframe').forEach(f => {
-                const s = f.src; f.src = "about:blank"; setTimeout(() => f.src = s, 100);
-            });
+            const f = document.getElementById('frame-top');
+            if(f) f.src = "./ad.html?pos=top&t=" + Date.now();
         }, 30000);
+        setTimeout(() => {
+            setInterval(() => {
+                const f = document.getElementById('frame-bottom');
+                if(f) f.src = "./ad.html?pos=bottom&t=" + Date.now();
+            }, 30000);
+        }, 15000);
     </script>
 </body>
 </html>
